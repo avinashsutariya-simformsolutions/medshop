@@ -117,9 +117,29 @@ export function Home({ nearDays }: { nearDays: number }) {
           </Link>
         ))}
       </nav>
+
+      <section aria-labelledby="masters-title" className="rounded-xl border border-line bg-card px-5 py-4">
+        <h2 id="masters-title" className="mb-2 text-sm font-medium text-ink-soft">
+          {t("mastersTitle")}
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {MASTER_LINKS.map((l) => (
+            <Link key={l.to} to={l.to} className="rounded-lg border border-line px-4 py-2 font-medium text-brand hover:border-brand hover:bg-brand-soft">
+              {t(l.label)}
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
+
+const MASTER_LINKS: { to: string; label: StringKey }[] = [
+  { to: "/stock", label: "medicines" },
+  { to: "/suppliers", label: "suppliers" },
+  { to: "/customers", label: "customers" },
+  { to: "/import", label: "importData" },
+];
 
 function Stat(props: { label: string; value: string; sub: string; tone?: "warn" | "bad"; to?: string }) {
   const toneCls =

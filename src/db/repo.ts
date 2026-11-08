@@ -33,8 +33,9 @@ export function toFtsQuery(input: string): string {
     .join(" ");
 }
 
-const SEARCH_SELECT = `
+export const SEARCH_SELECT = `
   SELECT i.id, i.name, i.salt, c.name AS company, i.pack_size, i.unit, i.schedule, i.rack,
+         i.gst_rate_bp, i.reorder_level, i.barcode,
          COALESCE(SUM(CASE WHEN b.expiry >= $2 THEN b.qty_units END), 0) AS stock_units,
          (SELECT b2.mrp_paise FROM batches b2
            WHERE b2.item_id = i.id AND b2.qty_units > 0 AND b2.expiry >= $2

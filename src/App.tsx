@@ -5,6 +5,10 @@ import type { Lang } from "./i18n/strings";
 import { AppShell } from "./components/AppShell";
 import { Home } from "./pages/Home";
 import { ComingSoon } from "./pages/ComingSoon";
+import { ItemsPage } from "./pages/ItemsPage";
+import { ItemEditPage } from "./pages/ItemEditPage";
+import { PartiesPage } from "./pages/PartiesPage";
+import { ImportPage } from "./pages/ImportPage";
 import { hasDatabase } from "./db";
 import { getSettings } from "./db/repo";
 import type { Settings } from "./db/types";
@@ -48,7 +52,11 @@ export default function App() {
             <Route index element={<Home nearDays={nearDays} />} />
             <Route path="bill" element={<ComingSoon title="newBill" sprint={3} />} />
             <Route path="purchase" element={<ComingSoon title="purchase" sprint={2} />} />
-            <Route path="stock" element={<ComingSoon title="stock" sprint={4} />} />
+            <Route path="stock" element={<ItemsPage />} />
+            <Route path="stock/items/:id" element={<ItemEditPage />} />
+            <Route path="suppliers" element={<PartiesPage table="suppliers" />} />
+            <Route path="customers" element={<PartiesPage table="customers" />} />
+            <Route path="import" element={<ImportPage />} />
             <Route path="expiry" element={<ComingSoon title="expiry" sprint={4} />} />
             <Route path="reports" element={<ComingSoon title="reports" sprint={6} />} />
             <Route path="settings" element={<ComingSoon title="settings" sprint={4} />} />

@@ -1,8 +1,11 @@
 // UI text in three languages. Medicine names stay in English everywhere.
 // To add a string: add the key to `en` first, TypeScript will then
 // force you to add it to `hi` and `mr` as well.
+// Sprint 1 text lives in strings.sprint1.ts and is merged in below.
 
-const en = {
+import { en1, hi1, mr1 } from "./strings.sprint1";
+
+const en0 = {
   appName: "MedShop",
   language: "Language",
   home: "Home",
@@ -42,10 +45,11 @@ const en = {
   dbError: "Could not open the database: {msg}",
 };
 
+const en = { ...en0, ...en1 };
 export type StringKey = keyof typeof en;
-type Dict = Record<StringKey, string>;
+type Dict0 = Record<keyof typeof en0, string>;
 
-const hi: Dict = {
+const hi0: Dict0 = {
   appName: "MedShop",
   language: "भाषा",
   home: "होम",
@@ -85,7 +89,7 @@ const hi: Dict = {
   dbError: "डेटाबेस नहीं खुला: {msg}",
 };
 
-const mr: Dict = {
+const mr0: Dict0 = {
   appName: "MedShop",
   language: "भाषा",
   home: "होम",
@@ -124,6 +128,9 @@ const mr: Dict = {
   noDbBody: "डेटाबेस फक्त desktop app मध्ये चालतो. चालवा: npm run tauri dev",
   dbError: "डेटाबेस उघडला नाही: {msg}",
 };
+
+const hi = { ...hi0, ...hi1 };
+const mr = { ...mr0, ...mr1 };
 
 export const dictionaries = { en, hi, mr } as const;
 export type Lang = keyof typeof dictionaries;

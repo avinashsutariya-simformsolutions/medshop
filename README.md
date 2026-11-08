@@ -1,7 +1,8 @@
 # MedShop — offline medical shop software
 
 Tauri 2 + React 19 + TypeScript + SQLite. Runs fully offline on Windows.
-This is **Sprint 0**: project skeleton, database schema, design system and home screen.
+**Sprint 1**: medicine / supplier / customer screens, Excel-CSV import of existing stock, GST 2.0 rates.
+(Sprint 0 gave the skeleton, schema, design system and home screen.)
 
 ## Windows पर पहली बार setup (एक बार)
 
@@ -17,6 +18,24 @@ npm run tauri dev     # app खुलेगा, पहली बार Rust comp
 ```
 
 Installer बनाने के लिए: `npm run tauri build` → `src-tauri/target/release/bundle/` में `.msi` और `.exe` मिलेगा।
+
+## Sprint 1 में क्या नया है
+
+- **GST 2.0** (22 Sep 2025 से): दवाओं पर 0% / 5% / 18%। Migration `002` पुराने 12% items को 5% कर देता है, और DB अब 12%/28% स्वीकार नहीं करता।
+- **दवाएँ (F6):** list + search; `Alt+N` नई दवा, `Enter` से अगला field, `Ctrl+S` save, `Esc` वापस। एक ही नाम की दवा पहले से हो तो चेतावनी। स्टॉक होने पर pack size lock हो जाता है।
+- **सप्लायर / ग्राहक:** list + form, GSTIN check।
+- **Excel / CSV import** (`Alt+I`): file चुनें → कॉलम अपने-आप पहचाने जाते हैं → जाँचें → import।
+  - Marg जैसी reports की title lines छोड़कर असली header ढूँढता है।
+  - Expiry के सारे formats: `08/27`, `Jan-28`, `0628`, `31/08/2027`, Excel dates।
+  - Pack: `15's`, `1x15`, `15 TAB`, `150ML`। मात्रा: `3`, `2.5`, `2:5` (2 strip + 5 tablet)।
+  - गलत lines छोड़ दी जाती हैं और कारण के साथ दिखती हैं; पूरा import एक transaction में (या सब, या कुछ नहीं)।
+  - वही file layout दोबारा आए तो पिछली बार का column मिलान याद रहता है।
+  - दूसरी बार opening stock import करने से पहले चेतावनी (वरना stock दोगुना होगा)।
+- **"सैंपल डेटा से आज़माएँ"** बटन: `templates/sample-opening-stock.csv` (29 दवाएँ, जानबूझकर गड़बड़ data) से पूरा import try करें।
+
+`.xls` (पुराना Excel) अभी सीधे नहीं पढ़ता: Excel में खोलकर **Save As → .xlsx** करें।
+
+> **Sample data हटाना:** test के बाद असली data डालने से पहले app बंद करें और `%APPDATA%\com.medshop.app\medshop.db*` files delete करें; अगली बार खाली DB बनेगा।
 
 ## Daily commands
 
@@ -37,11 +56,15 @@ src/
   pages/               Home, ComingSoon (बाकी screens अगले sprints में)
   hooks/useShortcuts   F2 बिल, F3 खरीद, F4 खोज, F6 स्टॉक, F7 एक्सपायरी, F8 रिपोर्ट, F9 सेटिंग्स, Esc होम
   i18n/                English / हिंदी / मराठी text
-  db/                  index.ts (connection), repo.ts (queries), types.ts
-  lib/                 money.ts, stock.ts — pure logic + tests
+  db/                  index.ts (reads), batch.ts (writes in one transaction), repo.ts, masters.ts, errors.ts
+  lib/                 money.ts, stock.ts, gst.ts — pure logic + tests
+  lib/importer/        read → mapping → values → stockImport / partyImport (+ importer.test.ts)
+templates/             blank import templates + sample files
 src-tauri/
   migrations/001_init.sql   पूरा database schema
+  migrations/002_gst2_and_imports.sql   GST 2.0, sale ≤ MRP, import tables
   src/lib.rs                SQL plugin + migrations
+  src/batch.rs              run_batch: बहुत सारे statements एक transaction में
 ```
 
 ## Data rules (इन्हें कभी न तोड़ें)
@@ -59,11 +82,18 @@ src-tauri/
 `%APPDATA%\com.medshop.app\medshop.db` — backup के लिए यही file (साथ में `-wal` file भी) copy करनी है।
 Inspect करने के लिए [DB Browser for SQLite](https://sqlitebrowser.org) से खोलें।
 
-## Known limitation (Sprint 3 में ठीक करेंगे)
+## Reads vs writes
 
-`tauri-plugin-sql` connection pool use करता है, इसलिए JavaScript से `BEGIN … COMMIT` भरोसेमंद transaction नहीं है।
-Bill save / purchase save जैसे multi-row काम Sprint 2–3 में **Rust command** से एक ही transaction में होंगे।
+- **Reads** (`query`, `queryOne` in `db/index.ts`) go through `tauri-plugin-sql`.
+- **Writes that touch more than one row** go through `new Batch().add(...).run()` (`db/batch.ts` → Rust `run_batch`).
+  It runs everything in one SQLite transaction on a single connection, so a failure saves nothing.
+  The plugin's pool cannot guarantee that for `BEGIN … COMMIT` sent from JavaScript.
 
-## Next: Sprint 1
+## Tested
 
-Item / company / supplier / customer masters, CSV import, और search की speed test (10,000 items पर < 0.3 sec)।
+- 45 automated tests (`npm test`): GST, money, expiry/pack/quantity parsing, column detection, and the full sample import run against a real SQLite database with both migrations (including rollback on error).
+- Search speed: 10,000 medicines + 15,000 batches → each search about 1 ms (target was < 300 ms).
+
+## Next: Sprint 2
+
+Purchase entry: तेज़ keyboard grid + distributor की CSV/Excel file से import (हर distributor का format एक बार map करें)। Purchase rate पिछली बार से अलग हो तो चेतावनी।

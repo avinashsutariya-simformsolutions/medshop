@@ -11,6 +11,9 @@ export interface ItemSearchRow {
   unit: string;
   schedule: Schedule;
   rack: string | null;
+  gst_rate_bp: number;
+  reorder_level: number;
+  barcode: string | null;
   /** Saleable stock in units (non-expired batches only). */
   stock_units: number;
   /** MRP per pack of the batch that would be sold first (FEFO). */
